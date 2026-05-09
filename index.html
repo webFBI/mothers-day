@@ -571,6 +571,9 @@ body {
 <div class="toast" id="toast"></div>
 
 <!-- ── Buttons ──────────────────────────── -->
+<audio id="bgMusic" loop preload="auto" style="display:none">
+  <source src="https://raw.githubusercontent.com/webFBI/mothers-day/gh-pages/music.mp3" type="audio/mpeg">
+</audio>
 <button class="float-btn music-btn" id="musicBtn" aria-label="音乐">🎵</button>
 <button class="float-btn share-btn" id="shareBtn">💝 分享给妈妈</button>
 
@@ -688,7 +691,7 @@ body {
         妈妈，您辛苦了！<br>
         我永远爱您。
       </p>
-      <div class="signature-line">—— 您的孩子</div>
+      <div class="signature-line">—— 永远爱您</div>
     </div>
   </div>
 
@@ -844,52 +847,33 @@ body {
 
   // ═══ Music ═══
   const musicBtn = document.getElementById('musicBtn');
-  let audioCtx = null, musicPlaying = false, musicTimer = null;
+  const bgMusic = document.getElementById('bgMusic');
+  let musicPlaying = false;
 
-  function playTone(ctx, freq, start, dur) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(0.22, start + 0.06);
-    gain.gain.setValueAtTime(0.22, start + dur - 0.1);
-    gain.gain.linearRampToValueAtTime(0, start + dur);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(start);
-    osc.stop(start + dur + 0.05);
-  }
-
-  function startMusic() {
-    if (musicPlaying) return;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const melody = [523,587,659,523, 698,659,587,698, 784,880,784,698, 659,587,523];
-    const dur = 0.55, gap = 0.12;
-    const loopLen = melody.length * (dur + gap) + 2;
-
-    function loop() {
-      if (!musicPlaying) return;
-      const t = audioCtx.currentTime + 0.1;
-      melody.forEach((f, i) => playTone(audioCtx, f, t + i * (dur + gap), dur));
-      musicTimer = setTimeout(loop, loopLen * 1000);
+  musicBtn.addEventListener('click', () => {
+    if (musicPlaying) {
+      bgMusic.pause();
+      musicBtn.innerHTML = '🎵';
+      musicBtn.classList.remove('playing');
+    } else {
+      bgMusic.play().catch(() => showToast('请先点击页面任意位置'));
+      musicBtn.innerHTML = '🎶';
+      musicBtn.classList.add('playing');
     }
-    loop();
+    musicPlaying = !musicPlaying;
+  });
+
+  bgMusic.addEventListener('play', () => {
     musicPlaying = true;
     musicBtn.innerHTML = '🎶';
     musicBtn.classList.add('playing');
-    showToast('🎵 音乐已开启');
-  }
+  });
 
-  function stopMusic() {
+  bgMusic.addEventListener('pause', () => {
     musicPlaying = false;
-    clearTimeout(musicTimer);
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
     musicBtn.innerHTML = '🎵';
     musicBtn.classList.remove('playing');
-  }
-
-  musicBtn.addEventListener('click', () => musicPlaying ? stopMusic() : startMusic());
+  });
 
   // ═══ Share ═══
   document.getElementById('shareBtn').addEventListener('click', () => {
